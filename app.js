@@ -192,17 +192,19 @@ class DoublyLinkedList {
         const newNode = await this.createNewNode(value, tail);
         const newNodeID = newNode.insertedId;
 
+        console.log(newNodeID)
         //adding a node to an empty linked list, head set here, tail set after the clause, since it works for both cases
         if (tail === null) {
             this.setHead(newNodeID);
+            this.setTail(newNodeID);
         } else {
             await this.collection.updateOne(
                 {_id: tail},
                 { $set: { next: newNodeID } }
             );
         }
-        
-        this.setTail(newNodeID);
+
+        await this.setTail(newNodeID);
     }
     
 
@@ -227,31 +229,45 @@ class DoublyLinkedList {
         return currentNode;
     }
 
-    /**
-     * Finds node by id - searches from the beginning
-     * @param {*} nodeID 
-     */
-    // async getNodeByID(nodeID) {
-    //     const head = await this.getHead();
-
-    //     let currentNode = await this.collection.find({_id: head}).next();
-    //     let currentNodeID = currentNode._id;
-
-    //     while (!nodeID.equals(currentNodeID)) {
-    //         currentNode = await this.collection.find({_id: currentNode.next}).next();
-    //         if (currentNode === null) {
-    //             throw new Error(`Node with ${nodeID} ObjectID not found.`);
-    //         }
-    //         currentNodeID = currentNode._id;
-    //     }
-
-    //     return currentNode;
-    // }
 
     async getNodeByID(nodeID) {
         return await this.collection.find({_id: nodeID}).next();
     }
-    
+
+    async moveNodeAfterNode(moveNodeID, afterNodeID) {
+        const nodeToMove = await this.getNodeByID(moveNodeID);
+        const nodeToMoveNextID = nodeToMove.next;
+        const nodeToMovePrevID = nodeToMove.prev;
+
+        //move reference of previous node next to point to the next of the node that is moved // working
+        await this.collection.updateOne(
+        {_id: nodeToMovePrevID},
+                { $set: { next: nodeToMoveNextID } }
+            );
+        //move reference of next node prev to point to the prev of the node that is moved // working
+        await this.collection.updateOne(
+            {_id: nodeToMoveNextID},
+                {$set: { prev: nodeToMovePrevID}}
+        );
+
+        const nodeToMoveAfter = await this.getNodeByID(afterNodeID);
+        const nodeToMoveAfterNextID = nodeToMoveAfter.next;
+
+        await this.collection.updateOne(
+        {_id: afterNodeID},
+                { $set: { next: moveNodeID } }
+            );
+        
+        await this.collection.updateOne(
+            {_id: nodeToMoveAfterNextID},
+                {$set: { prev: moveNodeID}}
+        );
+        //edit the moved nodes next and prev
+        await this.collection.updateOne(
+            {_id: moveNodeID},
+                {$set: { prev: afterNodeID, next: nodeToMoveAfterNextID}}
+        );
+    } 
 }
 
 (async function () {
@@ -263,9 +279,12 @@ class DoublyLinkedList {
     //    await doublyLinkedList.add('cat');
     //    await doublyLinkedList.add('dog');
     //    await doublyLinkedList.add('turtle');
-      const result = await doublyLinkedList.getNodeByID(ObjectID('6030191487044441f2fb220b'))
+    //    await doublyLinkedList.add('hippopotamus');
+    //    await doublyLinkedList.add('bla');
+      const result = await doublyLinkedList.moveNodeAfterNode(ObjectID("60304ef883c0916e199469e1"), ObjectID("60304ef783c0916e199469df"))
+
     //    const result = await linkedList.get(1);
-        console.log(result)
+        // console.log(result)
     } catch (error) {
         console.error(error.stack);
     }
