@@ -1,5 +1,6 @@
 require('dotenv').config();
 const MongoClient = require('mongodb').MongoClient;
+const ObjectID = require('mongodb').ObjectID;
 const atlasUri = process.env.ATLAS_URI;
 const atlasDBName = process.env.ATLAS_DB_NAME;
 const atlasDBLLCollection = process.env.ATLAS_DB_LL_COLLECTION;
@@ -226,6 +227,27 @@ class DoublyLinkedList {
         return currentNode;
     }
 
+    /**
+     * Finds node by id - searches from the beginning
+     * @param {*} nodeID 
+     */
+    async getNodeByID(nodeID) {
+        const head = await this.getHead();
+
+        let currentNode = await this.collection.find({_id: head}).next();
+        let currentNodeID = currentNode._id;
+
+        while (!nodeID.equals(currentNodeID)) {
+            currentNode = await this.collection.find({_id: currentNode.next}).next();
+            if (currentNode === null) {
+                throw new Error(`Node with ${moveAfterNodeID} ObjectId not found.`);
+            }
+            currentNodeID = currentNode._id;
+        }
+
+        return currentNode;
+    }
+
     
 }
 
@@ -233,13 +255,14 @@ class DoublyLinkedList {
     try {
        const doublyLinkedList = new DoublyLinkedList();
        await doublyLinkedList.init(); 
-       await doublyLinkedList.resetAtlasData()
-       await doublyLinkedList.resetMeta()
-       await doublyLinkedList.add('cat');
-       await doublyLinkedList.add('dog');
-       await doublyLinkedList.add('turtle');
+    //    await doublyLinkedList.resetAtlasData()
+    //    await doublyLinkedList.resetMeta()
+    //    await doublyLinkedList.add('cat');
+    //    await doublyLinkedList.add('dog');
+    //    await doublyLinkedList.add('turtle');
+      const result = await doublyLinkedList.getNodeByID(ObjectID('6030191487044441f2fb220b'))
     //    const result = await linkedList.get(1);
-        // console.log(result)
+        console.log(result)
     } catch (error) {
         console.error(error.stack);
     }
