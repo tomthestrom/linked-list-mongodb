@@ -231,23 +231,26 @@ class DoublyLinkedList {
      * Finds node by id - searches from the beginning
      * @param {*} nodeID 
      */
+    // async getNodeByID(nodeID) {
+    //     const head = await this.getHead();
+
+    //     let currentNode = await this.collection.find({_id: head}).next();
+    //     let currentNodeID = currentNode._id;
+
+    //     while (!nodeID.equals(currentNodeID)) {
+    //         currentNode = await this.collection.find({_id: currentNode.next}).next();
+    //         if (currentNode === null) {
+    //             throw new Error(`Node with ${nodeID} ObjectID not found.`);
+    //         }
+    //         currentNodeID = currentNode._id;
+    //     }
+
+    //     return currentNode;
+    // }
+
     async getNodeByID(nodeID) {
-        const head = await this.getHead();
-
-        let currentNode = await this.collection.find({_id: head}).next();
-        let currentNodeID = currentNode._id;
-
-        while (!nodeID.equals(currentNodeID)) {
-            currentNode = await this.collection.find({_id: currentNode.next}).next();
-            if (currentNode === null) {
-                throw new Error(`Node with ${moveAfterNodeID} ObjectId not found.`);
-            }
-            currentNodeID = currentNode._id;
-        }
-
-        return currentNode;
+        return await this.collection.find({_id: nodeID}).next();
     }
-
     
 }
 
