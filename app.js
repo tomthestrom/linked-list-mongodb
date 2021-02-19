@@ -152,8 +152,8 @@ class DoublyLinkedList {
             { upsert: true }
         )
     }
-    async createNewNode (value) {
-        const newNode = await this.collection.insertOne({ value, next: null});
+    async createNewNode (value, previous=null) {
+        const newNode = await this.collection.insertOne({ value, next: null, prev: previous});
         return newNode;
     }
 
@@ -186,24 +186,29 @@ class DoublyLinkedList {
         
     }
     async add(value) {
-        const newNode = await this.createNewNode(value);
-        const newNodeID = newNode.insertedId;
         const head = await this.getHead();
 
         //adding a node to an empty linked list
         if (head === null) {
+            const newNode = await this.createNewNode(value);
+            const newNodeID = newNode.insertedId;
             this.setHead(newNodeID);
             this.setTail(newNodeID);
         } else {
             //adding a node to a non empty linked list
             const tailID = await this.getTail();
+            //set the previous of the newNode to the ex-tail
+            const newNode = await this.createNewNode(value, tailID);
+            const newNodeID = newNode.insertedId;
             await this.collection.updateOne(
                 {_id: tailID},
                 { $set: { next: newNodeID } }
             );
+
+
+            this.setTail(newNodeID);
         }
 
-        this.setTail(newNodeID);
     }
 
     async get(index) {
@@ -213,7 +218,6 @@ class DoublyLinkedList {
 
         const head = await this.getHead();
         let currentNode = await this.collection.find({_id: head}).next();
-        console.log(currentNode);
 
         let position = 0;
         //loop through the nodes till we hit the index
@@ -237,9 +241,9 @@ class DoublyLinkedList {
        await doublyLinkedList.init(); 
        await doublyLinkedList.resetAtlasData()
        await doublyLinkedList.resetMeta()
-    //    await linkedList.add('cat');
-    //    await linkedList.add('dog');
-    //    await linkedList.add('turtle');
+       await doublyLinkedList.add('cat');
+       await doublyLinkedList.add('dog');
+       await doublyLinkedList.add('turtle');
     //    const result = await linkedList.get(1);
         // console.log(result)
     } catch (error) {
