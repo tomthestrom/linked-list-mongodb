@@ -186,30 +186,24 @@ class DoublyLinkedList {
         
     }
     async add(value) {
-        const head = await this.getHead();
+        const tail = await this.getTail();
+        //set the previous of the newNode to the ex-tail, in case it does not exist (the first element) it's just null
+        const newNode = await this.createNewNode(value, tail);
+        const newNodeID = newNode.insertedId;
 
-        //adding a node to an empty linked list
-        if (head === null) {
-            const newNode = await this.createNewNode(value);
-            const newNodeID = newNode.insertedId;
+        //adding a node to an empty linked list, head set here, tail set after the clause, since it works for both cases
+        if (tail === null) {
             this.setHead(newNodeID);
-            this.setTail(newNodeID);
         } else {
-            //adding a node to a non empty linked list
-            const tailID = await this.getTail();
-            //set the previous of the newNode to the ex-tail
-            const newNode = await this.createNewNode(value, tailID);
-            const newNodeID = newNode.insertedId;
             await this.collection.updateOne(
-                {_id: tailID},
+                {_id: tail},
                 { $set: { next: newNodeID } }
             );
-
-
-            this.setTail(newNodeID);
         }
-
+        
+        this.setTail(newNodeID);
     }
+    
 
     async get(index) {
         if (index <= -1) {
