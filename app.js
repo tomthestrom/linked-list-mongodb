@@ -252,23 +252,27 @@ class DoublyLinkedList {
     );
   }
 
+  async setMovedNodeSurroundingNodesPointers(nodeToMove) {
+    //move reference of previous node's next to point to the next of the node that is moved
+    await this.updateNode(nodeToMove.prev, { next: nodeToMove.next });
+    //move reference of next node's prev to point to the prev of the node that is moved
+    await this.updateNode(nodeToMove.next, { prev: nodeToMove.prev });
+  }
+
   async moveNodeAfterNode(nodeID, afterNodeID) {
     const nodeToMove = await this.getNodeByID(nodeID);
     const nodeToMoveAfter = await this.getNodeByID(afterNodeID);
 
-    //move reference of previous node's next to point to the next of the node that is moved
-    await this.updateNode(nodeToMove.prev, { next: nodeToMove.next });
+    await this.setMovedNodeSurroundingNodesPointers(nodeToMove);
     //if we are moving the last node, reassign the tail to the new last
     if (nodeToMove.next === null) {
-        await this.setTail(nodeToMove.prev);
+      await this.setTail(nodeToMove.prev);
     }
 
     //if we are moving behind the last item, we set a new tail
     if (nodeToMoveAfter.next === null) {
-        await this.setTail(nodeID);
+      await this.setTail(nodeID);
     }
-    //move reference of next node's prev to point to the prev of the node that is moved
-    await this.updateNode(nodeToMove.next, { prev: nodeToMove.prev });
 
     //give new next to the node that we are moving our node after
     await this.updateNode(afterNodeID, { next: nodeID });
@@ -280,30 +284,29 @@ class DoublyLinkedList {
       next: nodeToMoveAfter.next,
     });
   }
-  
+
   async moveNodeBeforeNode(nodeID, beforeNodeID) {
     const nodeToMove = await this.getNodeByID(nodeID);
     const nodeToMoveBefore = await this.getNodeByID(beforeNodeID);
 
-    //change references of the node before and after the manipulated node
-    await this.updateNode(nodeToMove.prev, { next: nodeToMove.next });
-    await this.updateNode(nodeToMove.next, { prev: nodeToMove.prev });
+    await this.setMovedNodeSurroundingNodesPointers(nodeToMove);
 
     if (nodeToMove.next === null) {
-        await this.setTail(nodeToMove.prev);
+      await this.setTail(nodeToMove.prev);
     }
-    
 
     //if we are moving before the first item, we set a new head
     if (nodeToMoveBefore.prev === null) {
-        await this.setHead(nodeID);
+      await this.setHead(nodeID);
     }
     //new next for the node that is before the inserted node
     await this.updateNode(nodeToMoveBefore.prev, { next: nodeID });
-    await this.updateNode(nodeID, { prev: nodeToMoveBefore.prev, next: beforeNodeID });
+    await this.updateNode(nodeID, {
+      prev: nodeToMoveBefore.prev,
+      next: beforeNodeID,
+    });
     await this.updateNode(beforeNodeID, { prev: nodeID });
   }
-
 }
 
 (async function () {
@@ -321,7 +324,6 @@ class DoublyLinkedList {
       ObjectID("60311ecbe61f542cc5a78df3"),
       ObjectID("60311ec9e61f542cc5a78df0")
     );
-
   } catch (error) {
     console.error(error.stack);
   }
